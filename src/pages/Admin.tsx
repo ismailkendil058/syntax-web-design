@@ -1,123 +1,239 @@
 
-import { useState } from 'react';
-import { ArrowLeft, Eye, Mail, Phone, Globe } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-
-interface FormSubmission {
-  id: string;
-  name: string;
-  surname: string;
-  email: string;
-  phone: string;
-  businessUrl: string;
-  contactMethod: 'email' | 'whatsapp';
-  message: string;
-  submittedAt: string;
-}
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Home, 
+  Users, 
+  FileSpreadsheet, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Upload, 
+  Eye, 
+  Settings 
+} from 'lucide-react';
 
 const Admin = () => {
-  const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [submissions, setSubmissions] = useState<FormSubmission[]>([
+  const [activeTab, setActiveTab] = useState('submissions');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Sample data for form submissions
+  const [submissions] = useState([
     {
-      id: '1',
-      name: 'John',
-      surname: 'Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-      businessUrl: 'https://johndoe.com',
-      contactMethod: 'email',
-      message: 'Looking for a professional website for my consulting business.',
-      submittedAt: '2024-01-15T10:30:00Z'
+      id: 1,
+      name: 'John Smith',
+      email: 'john@example.com',
+      phone: '555-0123',
+      website: 'mycompany.com',
+      preferredMethod: 'Email',
+      message: 'Need a new website for my business',
+      date: '2024-01-15'
     },
     {
-      id: '2',
-      name: 'Jane',
-      surname: 'Smith',
-      email: 'jane.smith@example.com',
-      phone: '+1 (555) 987-6543',
-      businessUrl: '',
-      contactMethod: 'whatsapp',
-      message: 'Need an e-commerce website for my boutique.',
-      submittedAt: '2024-01-14T14:22:00Z'
+      id: 2,
+      name: 'Sarah Johnson',
+      email: 'sarah@startup.com',
+      phone: '555-0456',
+      website: 'startup.com',
+      preferredMethod: 'Phone',
+      message: 'Looking for e-commerce solution',
+      date: '2024-01-14'
     }
   ]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Sample categories data
+  const [categories, setCategories] = useState([
+    { id: 1, name: 'E-commerce', count: 5 },
+    { id: 2, name: 'Portfolio', count: 3 },
+    { id: 3, name: 'Business', count: 7 },
+    { id: 4, name: 'Blog', count: 2 }
+  ]);
+
+  // Sample portfolio items
+  const [portfolioItems, setPortfolioItems] = useState([
+    {
+      id: 1,
+      title: 'Modern E-commerce Store',
+      description: 'A sleek online store with payment integration',
+      category: 'E-commerce',
+      image: '/placeholder.svg',
+      projectLink: 'https://example.com',
+      features: ['Responsive Design', 'Payment Integration', 'Admin Panel']
+    },
+    {
+      id: 2,
+      title: 'Creative Portfolio',
+      description: 'Artist portfolio with gallery and contact form',
+      category: 'Portfolio',
+      image: '/placeholder.svg',
+      projectLink: 'https://example.com',
+      features: ['Image Gallery', 'Contact Form', 'Mobile Optimized']
+    }
+  ]);
+
+  const [newCategory, setNewCategory] = useState('');
+  const [editingItem, setEditingItem] = useState(null);
+  const [newItem, setNewItem] = useState({
+    title: '',
+    description: '',
+    category: '',
+    projectLink: '',
+    features: ''
+  });
+
+  const handleLogin = (e) => {
     e.preventDefault();
     if (password === '0000') {
       setIsAuthenticated(true);
       toast({
-        title: "Welcome to Admin Dashboard",
-        description: "You have successfully logged in.",
+        title: 'Welcome!',
+        description: 'Successfully logged into admin dashboard.',
       });
     } else {
       toast({
-        title: "Access Denied",
-        description: "Incorrect password. Please try again.",
-        variant: "destructive",
+        title: 'Access Denied',
+        description: 'Incorrect password. Please try again.',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleBackToHome = () => {
-    window.location.href = '/';
+  const exportToGoogleSheets = () => {
+    // Simulate Google Sheets export
+    toast({
+      title: 'Exporting to Google Sheets',
+      description: 'Form submissions are being exported...',
+    });
+    // In a real implementation, this would integrate with Google Sheets API
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  const addCategory = () => {
+    if (newCategory.trim()) {
+      const newCat = {
+        id: categories.length + 1,
+        name: newCategory,
+        count: 0
+      };
+      setCategories([...categories, newCat]);
+      setNewCategory('');
+      toast({
+        title: 'Category Added',
+        description: `Category "${newCategory}" has been created.`,
+      });
+    }
+  };
+
+  const deleteCategory = (id) => {
+    setCategories(categories.filter(cat => cat.id !== id));
+    toast({
+      title: 'Category Deleted',
+      description: 'Category has been removed.',
     });
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // In a real implementation, this would upload to a server or cloud storage
+      toast({
+        title: 'Image Uploaded',
+        description: `Image "${file.name}" has been uploaded.`,
+      });
+    }
+  };
+
+  const addPortfolioItem = () => {
+    if (newItem.title && newItem.description) {
+      const item = {
+        ...newItem,
+        id: portfolioItems.length + 1,
+        image: '/placeholder.svg',
+        features: newItem.features.split(',').map(f => f.trim())
+      };
+      setPortfolioItems([...portfolioItems, item]);
+      setNewItem({
+        title: '',
+        description: '',
+        category: '',
+        projectLink: '',
+        features: ''
+      });
+      toast({
+        title: 'Portfolio Item Added',
+        description: 'New portfolio item has been created.',
+      });
+    }
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8 p-8">
-          <div className="text-center">
-            <h2 className="heading-luxury text-3xl text-charcoal mb-2">
-              Admin Access
-            </h2>
-            <p className="text-charcoal/70">Enter password to continue</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-cream border-2 border-charcoal/20 text-charcoal placeholder-charcoal/50 focus:outline-none focus:border-charcoal transition-colors"
-                placeholder="Enter admin password"
-              />
+      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-semibold text-charcoal">
+              Admin Login
+            </CardTitle>
+            <CardDescription>
+              Enter password to access admin dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="mt-1"
+                />
+              </div>
+              <Button type="submit" className="w-full btn-luxury">
+                Login
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/')}
+                className="text-charcoal border-charcoal hover:bg-charcoal hover:text-cream"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Back to Home
+              </Button>
             </div>
-
-            <button
-              type="submit"
-              className="btn-luxury w-full text-lg py-4"
-            >
-              Login
-            </button>
-          </form>
-
-          <button
-            onClick={handleBackToHome}
-            className="btn-luxury-outline w-full text-lg py-4 flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Home
-          </button>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -125,272 +241,286 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-cream">
       <div className="container-luxury py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="heading-luxury text-4xl text-charcoal">
-            Admin Dashboard
-          </h1>
-          <button
-            onClick={handleBackToHome}
-            className="btn-luxury-outline flex items-center"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Home
-          </button>
-        </div>
-
-        <div className="bg-charcoal/5 p-8 space-y-8">
-          <div>
-            <h2 className="heading-luxury text-2xl text-charcoal mb-6">
-              Form Submissions ({submissions.length})
-            </h2>
-            
-            {submissions.length === 0 ? (
-              <p className="text-charcoal/70 text-center py-12">
-                No form submissions yet.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {submissions.map((submission) => (
-                  <div
-                    key={submission.id}
-                    className="bg-cream p-6 border border-charcoal/20 space-y-4"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <h3 className="heading-luxury text-lg text-charcoal">
-                          {submission.name} {submission.surname}
-                        </h3>
-                        <p className="text-sm text-charcoal/60">
-                          Submitted on {formatDate(submission.submittedAt)}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-3 py-1 text-xs font-medium ${
-                          submission.contactMethod === 'email' 
-                            ? 'bg-charcoal text-cream' 
-                            : 'bg-charcoal/20 text-charcoal'
-                        }`}>
-                          {submission.contactMethod === 'email' ? 'Email' : 'WhatsApp'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Mail className="w-4 h-4 text-charcoal/60" />
-                        <span className="text-charcoal">{submission.email}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Phone className="w-4 h-4 text-charcoal/60" />
-                        <span className="text-charcoal">{submission.phone}</span>
-                      </div>
-                      {submission.businessUrl && (
-                        <div className="flex items-center space-x-2 md:col-span-2">
-                          <Globe className="w-4 h-4 text-charcoal/60" />
-                          <a 
-                            href={submission.businessUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-charcoal hover:text-charcoal/70 underline"
-                          >
-                            {submission.businessUrl}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-
-                    {submission.message && (
-                      <div>
-                        <h4 className="text-sm font-medium text-charcoal mb-2">Message:</h4>
-                        <p className="text-charcoal/70 text-sm bg-charcoal/5 p-3">
-                          {submission.message}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-semibold text-charcoal">Admin Dashboard</h1>
+          <div className="space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/')}
+              className="text-charcoal border-charcoal hover:bg-charcoal hover:text-cream"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsAuthenticated(false)}
+              className="text-charcoal border-charcoal hover:bg-charcoal hover:text-cream"
+            >
+              Logout
+            </Button>
           </div>
         </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="submissions" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Form Submissions
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Categories
+            </TabsTrigger>
+            <TabsTrigger value="portfolio" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Portfolio
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Form Submissions Tab */}
+          <TabsContent value="submissions">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Client Form Submissions</CardTitle>
+                    <CardDescription>
+                      View and manage all contact form submissions
+                    </CardDescription>
+                  </div>
+                  <Button onClick={exportToGoogleSheets} className="btn-luxury">
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Export to Google Sheets
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Website</TableHead>
+                      <TableHead>Preferred Method</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Message</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {submissions.map((submission) => (
+                      <TableRow key={submission.id}>
+                        <TableCell className="font-medium">{submission.name}</TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div>{submission.email}</div>
+                            <div className="text-sm text-gray-500">{submission.phone}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{submission.website}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{submission.preferredMethod}</Badge>
+                        </TableCell>
+                        <TableCell>{submission.date}</TableCell>
+                        <TableCell className="max-w-xs truncate">{submission.message}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Categories Tab */}
+          <TabsContent value="categories">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add New Category</CardTitle>
+                  <CardDescription>Create new portfolio categories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Category name"
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                    />
+                    <Button onClick={addCategory} className="btn-luxury">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Category
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Manage Categories</CardTitle>
+                  <CardDescription>Edit or remove existing categories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Category Name</TableHead>
+                        <TableHead>Project Count</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categories.map((category) => (
+                        <TableRow key={category.id}>
+                          <TableCell className="font-medium">{category.name}</TableCell>
+                          <TableCell>{category.count}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => deleteCategory(category.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Portfolio Tab */}
+          <TabsContent value="portfolio">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add New Portfolio Item</CardTitle>
+                  <CardDescription>Create new portfolio projects</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Project Title</Label>
+                      <Input
+                        id="title"
+                        placeholder="Project title"
+                        value={newItem.title}
+                        onChange={(e) => setNewItem({...newItem, title: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="category">Category</Label>
+                      <Input
+                        id="category"
+                        placeholder="Category"
+                        value={newItem.category}
+                        onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Project description"
+                      value={newItem.description}
+                      onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="projectLink">Project Link</Label>
+                    <Input
+                      id="projectLink"
+                      placeholder="https://example.com"
+                      value={newItem.projectLink}
+                      onChange={(e) => setNewItem({...newItem, projectLink: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="features">Features (comma separated)</Label>
+                    <Input
+                      id="features"
+                      placeholder="Responsive Design, Payment Integration, Admin Panel"
+                      value={newItem.features}
+                      onChange={(e) => setNewItem({...newItem, features: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="image">Upload Image</Label>
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </div>
+                  <Button onClick={addPortfolioItem} className="btn-luxury">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Portfolio Item
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Manage Portfolio Items</CardTitle>
+                  <CardDescription>Edit or remove existing portfolio projects</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    {portfolioItems.map((item) => (
+                      <div key={item.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{item.title}</h3>
+                            <p className="text-gray-600 mb-2">{item.description}</p>
+                            <div className="flex gap-2 mb-2">
+                              <Badge>{item.category}</Badge>
+                              {item.features.map((feature, index) => (
+                                <Badge key={index} variant="outline">{feature}</Badge>
+                              ))}
+                            </div>
+                            <a 
+                              href={item.projectLink} 
+                              className="text-blue-600 hover:underline text-sm"
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              {item.projectLink}
+                            </a>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Upload className="w-4 h-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
 };
 
 export default Admin;
-```
-
-Now I'll update the App.tsx to include the Admin route:
-
-<lov-write file_path="src/App.tsx">
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
-```
-
-Finally, I'll update the Navigation component to make the admin icon clickable and navigate to the admin page:
-
-<lov-write file_path="src/components/Navigation.tsx">
-import { useState } from 'react';
-import { Menu, X, Settings } from 'lucide-react';
-
-const Navigation = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    setIsMenuOpen(false);
-  };
-
-  const goToAdmin = () => {
-    window.location.href = '/admin';
-  };
-
-  return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-charcoal/10">
-      <div className="container-luxury">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <h1 className="text-2xl font-semibold text-charcoal tracking-tight">
-              Syntax Studio
-            </h1>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              <button
-                onClick={() => scrollToSection('home')}
-                className="text-charcoal hover:text-charcoal/70 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => scrollToSection('about')}
-                className="text-charcoal hover:text-charcoal/70 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                About
-              </button>
-              <button
-                onClick={() => scrollToSection('portfolio')}
-                className="text-charcoal hover:text-charcoal/70 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                Portfolio
-              </button>
-              <button
-                onClick={() => scrollToSection('contact')}
-                className="btn-luxury"
-              >
-                Book Your Website
-              </button>
-            </div>
-          </div>
-
-          {/* Admin Icon & Mobile menu button */}
-          <div className="flex items-center space-x-4">
-            {/* Admin Icon */}
-            <button
-              onClick={goToAdmin}
-              className="text-charcoal hover:text-charcoal/70 p-2 transition-colors duration-200"
-              title="Admin Access"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={toggleMenu}
-                className="bg-cream p-2 inline-flex items-center justify-center text-charcoal hover:text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-charcoal"
-              >
-                {isMenuOpen ? (
-                  <X className="block h-6 w-6" />
-                ) : (
-                  <Menu className="block h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-charcoal/10">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-cream">
-            <button
-              onClick={() => scrollToSection('home')}
-              className="text-charcoal hover:text-charcoal/70 block px-3 py-2 text-base font-medium w-full text-left"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => scrollToSection('about')}
-              className="text-charcoal hover:text-charcoal/70 block px-3 py-2 text-base font-medium w-full text-left"
-            >
-              About
-            </button>
-            <button
-              onClick={() => scrollToSection('portfolio')}
-              className="text-charcoal hover:text-charcoal/70 block px-3 py-2 text-base font-medium w-full text-left"
-            >
-              Portfolio
-            </button>
-            <button
-              onClick={() => scrollToSection('contact')}
-              className="btn-luxury w-full mt-4"
-            >
-              Book Your Website
-            </button>
-            <button
-              onClick={goToAdmin}
-              className="text-charcoal hover:text-charcoal/70 flex items-center px-3 py-2 text-base font-medium w-full text-left"
-              title="Admin Access"
-            >
-              <Settings className="w-5 h-5 mr-2" />
-              Admin
-            </button>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-};
-
-export default Navigation;
-```
