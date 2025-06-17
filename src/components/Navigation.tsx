@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Settings } from 'lucide-react';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -58,18 +58,29 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Admin Icon & Mobile menu button */}
+          <div className="flex items-center space-x-4">
+            {/* Admin Icon */}
             <button
-              onClick={toggleMenu}
-              className="bg-cream p-2 inline-flex items-center justify-center text-charcoal hover:text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-charcoal"
+              className="text-charcoal hover:text-charcoal/70 p-2 transition-colors duration-200"
+              title="Admin Access"
             >
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" />
-              ) : (
-                <Menu className="block h-6 w-6" />
-              )}
+              <Settings className="w-5 h-5" />
             </button>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={toggleMenu}
+                className="bg-cream p-2 inline-flex items-center justify-center text-charcoal hover:text-charcoal/70 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-charcoal"
+              >
+                {isMenuOpen ? (
+                  <X className="block h-6 w-6" />
+                ) : (
+                  <Menu className="block h-6 w-6" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -101,6 +112,13 @@ const Navigation = () => {
               className="btn-luxury w-full mt-4"
             >
               Book Your Website
+            </button>
+            <button
+              className="text-charcoal hover:text-charcoal/70 flex items-center px-3 py-2 text-base font-medium w-full text-left"
+              title="Admin Access"
+            >
+              <Settings className="w-5 h-5 mr-2" />
+              Admin
             </button>
           </div>
         </div>
