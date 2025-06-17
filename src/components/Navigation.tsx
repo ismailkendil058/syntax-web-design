@@ -1,9 +1,11 @@
 
 import { useState } from 'react';
 import { Menu, X, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -14,6 +16,11 @@ const Navigation = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    setIsMenuOpen(false);
+  };
+
+  const handleAdminClick = () => {
+    navigate('/admin');
     setIsMenuOpen(false);
   };
 
@@ -62,6 +69,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-4">
             {/* Admin Icon */}
             <button
+              onClick={handleAdminClick}
               className="text-charcoal hover:text-charcoal/70 p-2 transition-colors duration-200"
               title="Admin Access"
             >
@@ -114,6 +122,7 @@ const Navigation = () => {
               Book Your Website
             </button>
             <button
+              onClick={handleAdminClick}
               className="text-charcoal hover:text-charcoal/70 flex items-center px-3 py-2 text-base font-medium w-full text-left"
               title="Admin Access"
             >
