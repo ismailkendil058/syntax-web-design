@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useFormSubmissions } from '@/hooks/useFormSubmissions';
 
 interface FormData {
   name: string;
@@ -14,6 +15,7 @@ interface FormData {
 
 const ContactSection = () => {
   const { toast } = useToast();
+  const { addSubmission } = useFormSubmissions();
   const [formData, setFormData] = useState<FormData>({
     name: '',
     surname: '',
@@ -39,6 +41,9 @@ const ContactSection = () => {
 
     try {
       console.log('Form submitted:', formData);
+      
+      // Save form submission
+      addSubmission(formData);
       
       // Simulate form submission
       await new Promise(resolve => setTimeout(resolve, 1000));

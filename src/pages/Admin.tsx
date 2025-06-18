@@ -1,239 +1,123 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Home, 
-  Users, 
-  FileSpreadsheet, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Upload, 
-  Eye, 
-  Settings 
-} from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { useFormSubmissions } from '@/hooks/useFormSubmissions';
 
 const Admin = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState('submissions');
+  const [categories, setCategories] = useState(['E-commerce', 'Portfolio', 'Corporate', 'Blog']);
+  const [newCategory, setNewCategory] = useState('');
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { submissions, exportToGoogleSheets, clearSubmissions } = useFormSubmissions();
 
-  // Sample data for form submissions
-  const [submissions] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john@example.com',
-      phone: '555-0123',
-      website: 'mycompany.com',
-      preferredMethod: 'Email',
-      message: 'Need a new website for my business',
-      date: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah@startup.com',
-      phone: '555-0456',
-      website: 'startup.com',
-      preferredMethod: 'Phone',
-      message: 'Looking for e-commerce solution',
-      date: '2024-01-14'
-    }
-  ]);
-
-  // Sample categories data
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'E-commerce', count: 5 },
-    { id: 2, name: 'Portfolio', count: 3 },
-    { id: 3, name: 'Business', count: 7 },
-    { id: 4, name: 'Blog', count: 2 }
-  ]);
-
-  // Sample portfolio items
-  const [portfolioItems, setPortfolioItems] = useState([
-    {
-      id: 1,
-      title: 'Modern E-commerce Store',
-      description: 'A sleek online store with payment integration',
-      category: 'E-commerce',
-      image: '/placeholder.svg',
-      projectLink: 'https://example.com',
-      features: ['Responsive Design', 'Payment Integration', 'Admin Panel']
-    },
-    {
-      id: 2,
-      title: 'Creative Portfolio',
-      description: 'Artist portfolio with gallery and contact form',
-      category: 'Portfolio',
-      image: '/placeholder.svg',
-      projectLink: 'https://example.com',
-      features: ['Image Gallery', 'Contact Form', 'Mobile Optimized']
-    }
-  ]);
-
-  const [newCategory, setNewCategory] = useState('');
-  const [editingItem, setEditingItem] = useState(null);
-  const [newItem, setNewItem] = useState({
-    title: '',
-    description: '',
-    category: '',
-    projectLink: '',
-    features: ''
-  });
-
-  const handleLogin = (e) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === '0000') {
-      setIsAuthenticated(true);
+      setIsLoggedIn(true);
       toast({
-        title: 'Welcome!',
-        description: 'Successfully logged into admin dashboard.',
+        title: "Welcome to Admin Dashboard",
+        description: "You are now logged in.",
       });
     } else {
       toast({
-        title: 'Access Denied',
-        description: 'Incorrect password. Please try again.',
-        variant: 'destructive',
+        title: "Invalid Password",
+        description: "Please check your password and try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const exportToGoogleSheets = () => {
-    // Simulate Google Sheets export
-    toast({
-      title: 'Exporting to Google Sheets',
-      description: 'Form submissions are being exported...',
-    });
-    // In a real implementation, this would integrate with Google Sheets API
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setPassword('');
+    navigate('/');
   };
 
   const addCategory = () => {
-    if (newCategory.trim()) {
-      const newCat = {
-        id: categories.length + 1,
-        name: newCategory,
-        count: 0
-      };
-      setCategories([...categories, newCat]);
+    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
+      setCategories([...categories, newCategory.trim()]);
       setNewCategory('');
       toast({
-        title: 'Category Added',
-        description: `Category "${newCategory}" has been created.`,
+        title: "Category Added",
+        description: `"${newCategory.trim()}" has been added to categories.`,
       });
     }
   };
 
-  const deleteCategory = (id) => {
-    setCategories(categories.filter(cat => cat.id !== id));
+  const deleteCategory = (category: string) => {
+    setCategories(categories.filter(cat => cat !== category));
     toast({
-      title: 'Category Deleted',
-      description: 'Category has been removed.',
+      title: "Category Deleted",
+      description: `"${category}" has been removed from categories.`,
     });
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // In a real implementation, this would upload to a server or cloud storage
+  const startEditCategory = (category: string) => {
+    setEditingCategory(category);
+    setNewCategory(category);
+  };
+
+  const saveEditCategory = () => {
+    if (editingCategory && newCategory.trim()) {
+      const updatedCategories = categories.map(cat => 
+        cat === editingCategory ? newCategory.trim() : cat
+      );
+      setCategories(updatedCategories);
+      setEditingCategory(null);
+      setNewCategory('');
       toast({
-        title: 'Image Uploaded',
-        description: `Image "${file.name}" has been uploaded.`,
+        title: "Category Updated",
+        description: `Category has been updated to "${newCategory.trim()}".`,
       });
     }
   };
 
-  const addPortfolioItem = () => {
-    if (newItem.title && newItem.description) {
-      const item = {
-        ...newItem,
-        id: portfolioItems.length + 1,
-        image: '/placeholder.svg',
-        features: newItem.features.split(',').map(f => f.trim())
-      };
-      setPortfolioItems([...portfolioItems, item]);
-      setNewItem({
-        title: '',
-        description: '',
-        category: '',
-        projectLink: '',
-        features: ''
-      });
-      toast({
-        title: 'Portfolio Item Added',
-        description: 'New portfolio item has been created.',
-      });
-    }
+  const cancelEdit = () => {
+    setEditingCategory(null);
+    setNewCategory('');
   };
 
-  if (!isAuthenticated) {
+  if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-semibold text-charcoal">
-              Admin Login
-            </CardTitle>
-            <CardDescription>
-              Enter password to access admin dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter admin password"
-                  className="mt-1"
-                />
-              </div>
-              <Button type="submit" className="w-full btn-luxury">
-                Login
-              </Button>
-            </form>
-            <div className="mt-4 text-center">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/')}
-                className="text-charcoal border-charcoal hover:bg-charcoal hover:text-cream"
-              >
-                <Home className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="bg-charcoal/5 p-8 max-w-md w-full mx-4">
+          <h1 className="heading-luxury text-3xl text-charcoal mb-8 text-center">Admin Login</h1>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-charcoal mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-cream border border-charcoal/20 text-charcoal focus:outline-none focus:border-charcoal transition-colors"
+                placeholder="Enter admin password"
+                required
+              />
             </div>
-          </CardContent>
-        </Card>
+            <button
+              type="submit"
+              className="btn-luxury w-full"
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="btn-luxury-outline w-full"
+            >
+              Back to Home
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -241,280 +125,155 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-cream">
       <div className="container-luxury py-8">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-semibold text-charcoal">Admin Dashboard</h1>
-          <div className="space-x-4">
-            <Button
-              variant="outline"
+          <h1 className="heading-luxury text-4xl text-charcoal">Admin Dashboard</h1>
+          <div className="flex gap-4">
+            <button
               onClick={() => navigate('/')}
-              className="text-charcoal border-charcoal hover:bg-charcoal hover:text-cream"
+              className="btn-luxury-outline"
             >
-              <Home className="w-4 h-4 mr-2" />
               Back to Home
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsAuthenticated(false)}
-              className="text-charcoal border-charcoal hover:bg-charcoal hover:text-cream"
+            </button>
+            <button
+              onClick={handleLogout}
+              className="btn-luxury"
             >
               Logout
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs defaultValue="submissions" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="submissions" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Form Submissions
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Categories
-            </TabsTrigger>
-            <TabsTrigger value="portfolio" className="flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              Portfolio
-            </TabsTrigger>
+            <TabsTrigger value="submissions">Form Submissions</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
           </TabsList>
 
-          {/* Form Submissions Tab */}
-          <TabsContent value="submissions">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Client Form Submissions</CardTitle>
-                    <CardDescription>
-                      View and manage all contact form submissions
-                    </CardDescription>
-                  </div>
-                  <Button onClick={exportToGoogleSheets} className="btn-luxury">
-                    <FileSpreadsheet className="w-4 h-4 mr-2" />
-                    Export to Google Sheets
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
+          <TabsContent value="submissions" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="heading-luxury text-2xl text-charcoal">Client Form Submissions</h2>
+              <div className="flex gap-4">
+                <button
+                  onClick={exportToGoogleSheets}
+                  className="btn-luxury"
+                  disabled={submissions.length === 0}
+                >
+                  Export to CSV
+                </button>
+                <button
+                  onClick={clearSubmissions}
+                  className="btn-luxury-outline"
+                  disabled={submissions.length === 0}
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+            
+            {submissions.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-charcoal/60">No form submissions yet.</p>
+              </div>
+            ) : (
+              <div className="bg-white border border-charcoal/10 overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Website</TableHead>
-                      <TableHead>Preferred Method</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Contact Method</TableHead>
+                      <TableHead>Business URL</TableHead>
                       <TableHead>Message</TableHead>
+                      <TableHead>Submitted</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {submissions.map((submission) => (
                       <TableRow key={submission.id}>
-                        <TableCell className="font-medium">{submission.name}</TableCell>
+                        <TableCell>{submission.name} {submission.surname}</TableCell>
+                        <TableCell>{submission.email}</TableCell>
+                        <TableCell>{submission.phone}</TableCell>
+                        <TableCell className="capitalize">{submission.contactMethod}</TableCell>
                         <TableCell>
-                          <div className="space-y-1">
-                            <div>{submission.email}</div>
-                            <div className="text-sm text-gray-500">{submission.phone}</div>
-                          </div>
+                          {submission.businessUrl ? (
+                            <a href={submission.businessUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              {submission.businessUrl}
+                            </a>
+                          ) : (
+                            'N/A'
+                          )}
                         </TableCell>
-                        <TableCell>{submission.website}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{submission.preferredMethod}</Badge>
-                        </TableCell>
-                        <TableCell>{submission.date}</TableCell>
                         <TableCell className="max-w-xs truncate">{submission.message}</TableCell>
+                        <TableCell>{new Date(submission.submittedAt).toLocaleDateString()}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
+              </div>
+            )}
           </TabsContent>
 
-          {/* Categories Tab */}
-          <TabsContent value="categories">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Add New Category</CardTitle>
-                  <CardDescription>Create new portfolio categories</CardDescription>
-                </CardHeader>
-                <CardContent>
+          <TabsContent value="categories" className="space-y-6">
+            <h2 className="heading-luxury text-2xl text-charcoal">Manage Categories</h2>
+            
+            <div className="bg-charcoal/5 p-6 space-y-4">
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder={editingCategory ? "Edit category name" : "Add new category"}
+                  className="flex-1 px-4 py-2 bg-cream border border-charcoal/20 text-charcoal focus:outline-none focus:border-charcoal"
+                />
+                {editingCategory ? (
                   <div className="flex gap-2">
-                    <Input
-                      placeholder="Category name"
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                    />
-                    <Button onClick={addCategory} className="btn-luxury">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Category
-                    </Button>
+                    <button onClick={saveEditCategory} className="btn-luxury">Save</button>
+                    <button onClick={cancelEdit} className="btn-luxury-outline">Cancel</button>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Manage Categories</CardTitle>
-                  <CardDescription>Edit or remove existing categories</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Category Name</TableHead>
-                        <TableHead>Project Count</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {categories.map((category) => (
-                        <TableRow key={category.id}>
-                          <TableCell className="font-medium">{category.name}</TableCell>
-                          <TableCell>{category.count}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => deleteCategory(category.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                ) : (
+                  <button onClick={addCategory} className="btn-luxury">Add Category</button>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                {categories.map((category) => (
+                  <div key={category} className="flex items-center justify-between bg-cream p-3 border border-charcoal/10">
+                    <span className="text-charcoal">{category}</span>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => startEditCategory(category)}
+                        className="text-charcoal/60 hover:text-charcoal text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => deleteCategory(category)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
-          {/* Portfolio Tab */}
-          <TabsContent value="portfolio">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Add New Portfolio Item</CardTitle>
-                  <CardDescription>Create new portfolio projects</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="title">Project Title</Label>
-                      <Input
-                        id="title"
-                        placeholder="Project title"
-                        value={newItem.title}
-                        onChange={(e) => setNewItem({...newItem, title: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category</Label>
-                      <Input
-                        id="category"
-                        placeholder="Category"
-                        value={newItem.category}
-                        onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Project description"
-                      value={newItem.description}
-                      onChange={(e) => setNewItem({...newItem, description: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="projectLink">Project Link</Label>
-                    <Input
-                      id="projectLink"
-                      placeholder="https://example.com"
-                      value={newItem.projectLink}
-                      onChange={(e) => setNewItem({...newItem, projectLink: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="features">Features (comma separated)</Label>
-                    <Input
-                      id="features"
-                      placeholder="Responsive Design, Payment Integration, Admin Panel"
-                      value={newItem.features}
-                      onChange={(e) => setNewItem({...newItem, features: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="image">Upload Image</Label>
-                    <Input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                    />
-                  </div>
-                  <Button onClick={addPortfolioItem} className="btn-luxury">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Portfolio Item
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Manage Portfolio Items</CardTitle>
-                  <CardDescription>Edit or remove existing portfolio projects</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4">
-                    {portfolioItems.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg">{item.title}</h3>
-                            <p className="text-gray-600 mb-2">{item.description}</p>
-                            <div className="flex gap-2 mb-2">
-                              <Badge>{item.category}</Badge>
-                              {item.features.map((feature, index) => (
-                                <Badge key={index} variant="outline">{feature}</Badge>
-                              ))}
-                            </div>
-                            <a 
-                              href={item.projectLink} 
-                              className="text-blue-600 hover:underline text-sm"
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                            >
-                              {item.projectLink}
-                            </a>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Upload className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+          <TabsContent value="portfolio" className="space-y-6">
+            <h2 className="heading-luxury text-2xl text-charcoal">Portfolio Management</h2>
+            <div className="bg-charcoal/5 p-6">
+              <p className="text-charcoal/70 mb-4">Portfolio management features:</p>
+              <ul className="space-y-2 text-charcoal/60">
+                <li>• Upload and manage project images</li>
+                <li>• Edit project titles and descriptions</li>
+                <li>• Add project links and features</li>
+                <li>• Organize projects by category</li>
+              </ul>
+              <div className="mt-6">
+                <button className="btn-luxury">Add New Project</button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
